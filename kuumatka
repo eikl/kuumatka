@@ -1,0 +1,120 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+G = 6.67384*(10**(-11))
+MASSA_MAA = 5.9737*(10**24)
+KUU_MASSA = 0.0123*MASSA_MAA
+
+class Raketti:                  #Luokka Raketti, jolla arvojen käsittely helppoa
+    r = 384000000
+
+    def __init__(self,nopeus:float,massa:int,r_maa:float):
+        self.nopeus = nopeus
+        self.massa = massa
+        self.r_maa = r_maa
+        self.liikemaara = nopeus*massa
+        
+    def get_r_maa(self):
+        return self.r_maa
+
+    def get_r_kuu(self):
+        r = 384000000
+        return abs(r-self.r_maa)
+
+    def get_liikemaara(self):
+        return self.liikemaara
+
+    def update_liikemaara(self,uusi_liikemaara):
+        self.liikemaara = uusi_liikemaara
+        
+    def get_massa(self):
+        return self.massa
+
+    def get_nopeus(self):
+        return self.nopeus
+
+    def update_nopeus(self,uusi_nopeus):
+        self.nopeus = uusi_nopeus
+
+    def update_r_maa(self,delta_r):
+        self.r_maa += delta_r
+        
+    
+    					# funktioita joilla voidaan laskea arvoja
+def force(raketti: Raketti):    
+
+    f_maa = -G*(MASSA_MAA*raketti.get_massa())/(raketti.get_r_maa()**2)
+    f_kuu = G*(KUU_MASSA*raketti.get_massa())/(raketti.get_r_kuu()**2)
+
+    f = f_maa+f_kuu
+
+    return f
+
+def siirtyma(raketti:Raketti,dt):
+
+    delta_r = raketti.get_nopeus()*dt
+
+    return delta_r
+
+def uusi_liikemaara(raketti,dt):
+    
+    return  raketti.get_liikemaara() + force(raketti)*dt
+    
+    # PÄÄOHJELMA
+    
+def main():
+    # Alkuarvot
+    nopeus = 10987
+    massa = 200000
+    eta = 6471000
+    dt = 1
+    raketti = Raketti(nopeus,massa,eta)
+    t = 0
+    paikka = [eta]
+    aika = [t]
+    nopeuslista = [nopeus]
+    i = 0
+    
+    while True:
+        i += 1
+        t += dt
+        u_liike = uusi_liikemaara(raketti,dt)               
+        uusi_liikemaara_nopeus = u_liike/raketti.get_massa()
+        v_kesk = (raketti.get_nopeus()+uusi_liikemaara_nopeus)/2       # Uusi nopeus otetaan nopeuden muutoksen keskiarvona
+        
+        raketti.update_liikemaara(u_liike)
+        raketti.update_r_maa(siirtyma(raketti,dt))            # Laskee siirtymän alkunopeudella, myöhemmin uusilla nopeuksilla
+        
+        raketti.update_nopeus(v_kesk)                           # päivitetään nopeus
+        
+        if i == 10000:                                          # Kirjaa plotattavat piseet
+            paikka.append(raketti.get_r_maa())
+            aika.append(t/(60*60))    
+            nopeuslista.append(raketti.get_nopeus())
+            i = 0
+        
+        print([raketti.get_r_maa(),raketti.get_r_kuu()],t)
+        
+        print("Nopeus: ",raketti.get_nopeus())
+        
+        if raketti.get_r_kuu() < 1787100:           # Kun raketti 50 km kuun pinnan yläpuolella laskenta loppuu
+            break
+        
+        if raketti.get_nopeus() < 0:                # Jos raketti kääntyy laskeminen loppuu
+            print("Raketti kääntyy!")
+            break
+    
+    print("Matka-aika: {:.2f} päivää".format(t/(60*60*24)))
+    
+    X = np.array(aika)                                  # Plottaus:
+    Y = np.array(paikka)
+    plt.xlabel('Matka-aika (tunti)' ,fontsize=14)
+    plt.ylabel("Etäisyys maasta (10⁸ m)" ,fontsize=14)
+
+    
+    
+    plt.scatter(X,Y)
+    plt.show()
+    
+    
+main()
