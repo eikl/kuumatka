@@ -64,7 +64,7 @@ def uusi_liikemaara(raketti,dt):
     
 def main():
     # Alkuarvot
-    nopeus = 10987
+    nopeus = 7769.40
     massa = 200000
     eta = 6471000
     dt = 1
@@ -79,15 +79,14 @@ def main():
         i += 1
         t += dt
         u_liike = uusi_liikemaara(raketti,dt)               
-        uusi_liikemaara_nopeus = u_liike/raketti.get_massa()
-        v_kesk = (raketti.get_nopeus()+uusi_liikemaara_nopeus)/2       # Uusi nopeus otetaan nopeuden muutoksen keskiarvona
+        uusi_liikemaara_kesk = (raketti.get_liikemaara()+u_liike)/2
+        v_kesk = uusi_liikemaara_kesk/raketti.get_massa()       # Uusi nopeus otetaan nopeuden muutoksen keskiarvona
         
-        raketti.update_liikemaara(u_liike)
-        raketti.update_r_maa(siirtyma(raketti,dt))            # Laskee siirtymän alkunopeudella, myöhemmin uusilla nopeuksilla
+        raketti.update_liikemaara(uusi_liikemaara_kesk)
+        raketti.update_r_maa(siirtyma(raketti,dt))                      # Laskee siirtymän alkunopeudella, myöhemmin uusilla nopeuksilla
+        raketti.update_nopeus(v_kesk)                                   # päivitetään nopeus
         
-        raketti.update_nopeus(v_kesk)                           # päivitetään nopeus
-        
-        if i == 10000:                                          # Kirjaa plotattavat piseet
+        if i == 10000:                                                  # Kirjaa plotattavat piseet
             paikka.append(raketti.get_r_maa())
             aika.append(t/(60*60))    
             nopeuslista.append(raketti.get_nopeus())
